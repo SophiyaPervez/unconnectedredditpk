@@ -61,15 +61,15 @@ from brake.decorators import ratelimit
 from tasks import bulk_create_notifications, photo_tasks, unseen_comment_tasks, publicreply_tasks, photo_upload_tasks, \
 video_upload_tasks, video_tasks, video_vote_tasks, photo_vote_tasks, queue_for_deletion, VOTE_WEIGHT, rank_public_groups, \
 public_group_attendance_tasks, group_notification_tasks, publicreply_notification_tasks, fan_recount, vote_tasks, populate_search_thumbs, \
-home_photo_tasks, sanitize_erroneous_notif, set_input_rate_and_history, log_private_mehfil_session#, log_organic_attention
+home_photo_tasks, sanitize_erroneous_notif, set_input_rate_and_history, log_private_mehfil_session, log_profile_view#, log_organic_attention
 from .html_injector import create_gibberish_punishment_text
 from .check_abuse import check_photo_abuse, check_video_abuse
 from .models import Link, Cooldown, PhotoStream, TutorialFlag, PhotoVote, Photo, PhotoComment, PhotoCooldown, ChatInbox, \
 ChatPic, UserProfile, ChatPicMessage, UserSettings, Publicreply, GroupBanList, HellBanList, GroupCaptain, GroupTraffic, \
 Group, Reply, GroupInvite, HotUser, UserFan, Salat, LatestSalat, SalatInvite, TotalFanAndPhotos, Logout, Report, Video, \
 VideoComment
-from .redis4 import get_clones, set_photo_upload_key, get_and_delete_photo_upload_key, set_text_input_key, get_and_delete_text_input_key,\
-invalidate_avurl
+from redis4 import get_clones, set_photo_upload_key, get_and_delete_photo_upload_key, set_text_input_key, get_and_delete_text_input_key,\
+invalidate_avurl, retrieve_user_id
 from .redis3 import insert_nick_list, get_nick_likeness, find_nickname, get_search_history, select_nick, retrieve_history_with_pics,\
 search_thumbs_missing, del_search_history, retrieve_thumbs, retrieve_single_thumbs, get_temp_id, save_advertiser, get_advertisers, \
 purge_advertisers, get_gibberish_punishment_amount, retire_gibberish_punishment_amount, export_advertisers, temporarily_save_user_csrf, \
@@ -1938,6 +1938,8 @@ class UserProfilePhotosView(ListView):
 				context["subject_id"] = star_id
 				context["own_profile"] = False
 				context["allowed_fan"] = True
+			if star_id != user_id:
+				log_profile_view.delay(user_id,star_id,time.time())
 		else:
 			context["authenticated"] = False
 			context["not_fan"] = True
@@ -2378,6 +2380,11 @@ class UserProfileDetailView(DetailView):
 	def get_context_data(self, **kwargs):
 		context = super(UserProfileDetailView, self).get_context_data(**kwargs)
 		context["ratified"] = FEMALES
+		if self.request.user.is_authenticated():
+			user_id = str(self.request.user.id)
+			star_id = retrieve_user_id(self.kwargs["slug"])
+			if star_id != user_id:
+				log_profile_view.delay(user_id,star_id,time.time())
 		return context
 
 class DirectMessageCreateView(FormView):
@@ -4463,20 +4470,6 @@ def best_photos_list(request,*args,**kwargs):
 				page_obj = get_page_obj(page_num,obj_list_keys,PHOTOS_PER_PAGE)
 				context["page"] = page_obj
 				context["object_list"] = retrieve_photo_posts(page_obj.object_list)
-				# photos = cache.get('best_photos'+str(page_num))
-				# page_obj = cache.get('best_photos_page_obj'+str(page_num))
-				# if page_obj:
-				# 	context["page"] = page_obj	
-				# else:
-				# 	obj_list = all_best_photos()
-				# 	obj_list_keys = map(itemgetter(0), obj_list)
-				# 	page_obj = get_page_obj(page_num,obj_list_keys,PHOTOS_PER_PAGE)
-					# cache.set('best_photos_page_obj'+str(page_num), page_obj, timeout=5*60)
-				# if photos:
-				# 	context["object_list"] = photos
-				# else:
-				# 	context["object_list"] = retrieve_photo_posts(page_obj.object_list)
-					# cache.set('best_photos'+str(page_num), context["object_list"], timeout=5*60)
 			user = request.user
 			context["threshold"] = UPLOAD_PHOTO_REQ
 			context["username"] = user.username

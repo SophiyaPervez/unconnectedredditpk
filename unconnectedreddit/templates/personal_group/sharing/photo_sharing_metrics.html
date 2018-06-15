@@ -1,0 +1,62 @@
+{% extends "base_pg.html" %}
+{% load emoticons_tags %}
+{% load human_time %}
+{% load s3 %}
+{% block content %}
+<head><title>{{ username }}'s shared photos | Damadam.pk</title></head>
+<style>body{background: #E9EBEE}</style>
+
+<div style="max-width:600px;margin:0 auto;width:95%">
+
+{% if first_time %}
+<div class="cxl mbs bizcard lsp clb" style="padding:10px 8px;text-align:center;background-color:#ffffed">
+<span class="mrs" style="font-weight:bold">{% if own_profile %}Apki{% else %}{{ username }} ki{% endif %} pichley 1 week ki sab se ziyada shared photos yahan hain</span>
+</div>
+{% else %}
+<h1 class="cl clb" style="text-align:center">{% if own_profile %}Your{% else %}{{ username|truncatechars:13 }}'s{% endif %} {% if num_photos == 1 %}top shared photo{% elif num_photos == 0 %}top shared photos{% else %}top {{ num_photos }} shared photos{% endif %}:</h1>
+{% endif %}
+
+<div class="bizcard clb" style="background-color:white;padding:10px 8px;text-align:center">
+	{% if num_photos < 1 %}
+	<div class="cxl">
+		Pichley 1 week mein koi photo share nahi hui
+		<hr size=1 COLOR="#f2f2f2">
+		<div class="cgy cs sp">{% if own_profile %}Apkey khud kiye huay shares is list mein shamil nahi{% else %}Ye list kuch waqfay baad update hogi{% endif %}</div>
+		<a href="{% url 'profile' username %}"><button class="btn bcb bm mts mbl" style="height:26px">wapis</button></a>
+	</div>
+	{% else %}
+	<a href="{% url 'profile' username %}">
+		<span class="cm sp" style="border-bottom:1px dotted gray;color:gray">wapis</span>
+	</a><br>
+	
+	<ul style="margin:0 auto;display:inline-block;padding: 0;list-style: none">
+	{% for photo in final_photo_data %}
+	{% if forloop.counter != 1 %}<hr size=1 COLOR="#f2f2f2">{% endif %}
+	<li style="text-align:left" class="mbs">
+	<div style="font-weight:bold;max-width:400px" class="cl mts bw">{% emoticons %}{{ photo.caption }}{% endemoticons %}</div>
+	<img class="mt cs sp" src="{{ photo.image_url|s3 }}" alt="{{ photo.caption }}" style="overflow:hidden;border-radius:12px;width:100%;max-width:400px;"><br>
+	{% if own_profile %}<span class="cxs sp mrs" style="color:#0847c4">Shared {{ photo.num_shares }} {% if photo.num_shares == 1 %}time{% else %}times{% endif %} in 1 week</span>{% else %}<span class="cgy cxs sp mrs">uploaded {{ photo.upload_time|human_time }}</span>{% endif %}
+	<form method="POST" action="{% url 'share_photo_in_personal_group' %}" style="display:inline">
+		{% csrf_token %}
+		<input type="hidden" name="pl" value="{{ username }}:{{ photo.id }}:6:{{ photo_owner_id }}:{{ photo.caption }}">
+		<button name="purl" class="pg_ok_res" style="background:0 0;border:none;padding:0;margin:0" value="{{ photo.image_url }}"><img src="{{ STATIC_URL }}img/send.svg" width="18" height="18" style="vertical-align:middle"></button>
+	</form>
+	</li>
+	{% endfor %}
+	</ul>
+
+	{% if own_profile %}
+	<hr size=1 COLOR="#f2f2f2">
+	<span class="cxs sp cgy">Apkey apney kiye huay shares is list mein nahi</span>
+	{% else %}
+	<hr size=1 COLOR="#f2f2f2">
+	<span class="cxs sp cgy">Ye list pichley 1 week ke shares dikhati hai</span>
+	{% endif %}
+	
+	{% endif %}
+</div>
+
+</div>
+
+<br><br>
+{% endblock %}

@@ -6,7 +6,7 @@
  <input type="hidden" name="scp" value="{{ img_s_caption }}">
  <input type="hidden" name="hval" value="{{ hval }}">
  <input type="hidden" name="iid" value="{{ img_id }}">
-
+ {% if original_poster %}<input type="hidden" name="op" value="{{ original_poster }}">{% endif %}
  {% if incl_tgt %}
  <input type="hidden" name="t_pl" value="{{ t_uname }}:{{ t_st }}:{{ t_ctype }}:{{ t_time }}:{{ t_aurl }}">
  <input type="hidden" name="t_pl_ct" value="{{ t_ct }}">

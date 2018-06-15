@@ -776,6 +776,8 @@ def prepare_saved_content(own_id, target_id, list_of_dict, my_server = None):
 			if is_res_blob:
 				dictionary['t_username'] = own_uname
 				dictionary['t_av_url'] = own_avurl
+		if 'owner_uname' in dictionary:
+			dictionary['owner_uname'] = dictionary['owner_uname'].decode('utf-8')
 	return list_of_dict
 
 
@@ -1012,6 +1014,13 @@ def save_personal_group_content(own_id, their_id, group_id, blob_id, index):
 						'img':blob_contents['img'+index],'img_caption':blob_contents['img_caption'+index],'status':blob_contents['status'+index],\
 						'img_id':blob_contents['img_id'+index],'img_s_caption':blob_contents['img_s_caption'+index],'hidden':blob_contents['hidden'+index],\
 						'save_time':time.time()}
+					elif blob_contents['type'+index] == 'shared_img':
+						filtered_blob_contents = {'id':blob_contents['id'],'blob_id':blob_contents['blob_id'],'save_blob_id':new_save_blob_id,\
+						'img_hw_ratio':blob_contents['img_hw_ratio'+index],'which_blob':blob_contents['which_blob'],'time':blob_contents['time'+index],\
+						'type':blob_contents['type'+index],'img_width':blob_contents['img_width'+index],'img_height':blob_contents['img_height'+index],\
+						'shared_img':blob_contents['shared_img'+index],'img_caption':blob_contents['img_caption'+index],'status':blob_contents['status'+index],\
+						'img_id':blob_contents['img_id'+index],'img_s_caption':blob_contents['img_s_caption'+index],'hidden':blob_contents['hidden'+index],\
+						'save_time':time.time(),'owner_uname':blob_contents['owner_uname'+index]}
 					pipeline1 = my_server.pipeline()
 					# push into user's save list and save contents in a hash
 					pipeline1.lpush('pgsl:'+group_id+':'+own_id,new_save_blob_id)

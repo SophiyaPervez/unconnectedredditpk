@@ -10,7 +10,7 @@ personal_group_receive_sms, personal_group_customize_sms_text, personal_group_re
 personal_group_send_sms, personal_group_sms_text_form, personal_group_exit_settings, personal_group_their_chat_buttons, personal_group_reentry,\
 show_all_saved_posts_in_personal_group, retrieve_personal_group_saved_content,personal_group_delete_saved_post, personal_group_photo_settings,\
 post_js_reply_to_personal_group, personal_group_user_listing, unseen_per_grp, x_per_grp_notif, personal_group_metrics, share_photo_in_personal_group,\
-photo_shared, cant_share_photo, personal_group_help2, personal_group_help3, personal_group_help4#, deletion_test
+photo_shared, cant_share_photo, personal_group_help2, personal_group_help3, personal_group_help4, show_shared_photo_metrics#, deletion_test
 from links.number_verification import verify_personal_group_user
 
 admin.autodiscover()
@@ -74,4 +74,6 @@ urlpatterns = patterns('',
 	url(r'^private_chat_help_page2/$', auth(personal_group_help2), name='personal_group_help2'),
 	url(r'^private_chat_help_page3/$', auth(personal_group_help3), name='personal_group_help3'),
 	url(r'^private_chat_help_page4/$', auth(personal_group_help4), name='personal_group_help4'),
+	############################## Personal Group Shared Photos ###############################
+	url(r'^shared_photos/(?P<nick>[\w.@+-]+)/$', show_shared_photo_metrics, name='show_shared_photo_metrics'),
 )

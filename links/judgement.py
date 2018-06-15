@@ -61,10 +61,12 @@ def banned_users_list(request):
 		for user in banned_users:
 			banned_users_with_ttl.append((user,banned_ids_to_show_with_ttl[user.id]))
 		return render(request,"banned_users_list.html",{'banned_users_with_ttl':banned_users_with_ttl,'females':FEMALES,\
-			'status':request.session.pop("user_ban_change_status",None)})
+			'status':request.session.pop("user_ban_change_status",None),'cooloff_ttl':request.session.pop("user_ban_cooloff_ttl",None),\
+			'target_username':request.session.pop("user_ban_cooloff_username",None)})
 	else:
-		request.session.pop("user_ban_change_status",None)
-		return render(request,"banned_users_list.html",{'banned_users_with_ttl':[],'females':None,'status':None})
+		return render(request,"banned_users_list.html",{'status':request.session.pop("user_ban_change_status",None),\
+			'females':None,'cooloff_ttl':request.session.pop("user_ban_cooloff_ttl",None),'banned_users_with_ttl':[],\
+			'target_username':request.session.pop("user_ban_cooloff_username",None)})
 
 def first_time_inter_user_banner(request):
 	user_id = request.user.id
@@ -87,6 +89,9 @@ def inter_user_ban_not_permitted(request):
 @cache_control(max_age=0, no_cache=True, no_store=True, must_revalidate=True)
 @csrf_protect
 def enter_inter_user_ban(request,*args,**kwargs):
+	"""
+	Responsible for setting the ban on a certain target_id
+	"""
 	if request.method == "POST":
 		can_unban = request.POST.get("can_unban",None)
 		second_decision = request.POST.get("sec_dec",None)
@@ -95,10 +100,11 @@ def enter_inter_user_ban(request,*args,**kwargs):
 		if second_decision:
 			if second_decision == '0':
 				if can_unban:
+					# unbanning user
 					credentials= get_ban_target_credentials(own_id=user_id, destroy=True)
 					try:
 						target_user_id, target_username = credentials["target_id"], credentials["target_username"]
-					except:
+					except KeyError:
 						return redirect("banned_users_list")
 					banned = False
 					if target_user_id and target_username:
@@ -107,22 +113,29 @@ def enter_inter_user_ban(request,*args,**kwargs):
 					request.session.modified = True
 				return redirect("banned_users_list")
 			else:
+				# set ban on user
 				credentials = get_ban_target_credentials(own_id=user_id)
 				try:
 					target_user_id, target_username = credentials["target_id"], credentials["target_username"]
-				except:
+				except KeyError:
 					return redirect("banned_users_list")
 				try:
 					object_id, origin = credentials["object_id"], credentials["origin"]
-				except:
+				except KeyError:
 					object_id, origin = None, None
-				CONVERT_DUR_CODE_TO_DURATION = {'1':86400,'2':259200,'3':604800,'4':2628000,'5':7884000}
+				CONVERT_DUR_CODE_TO_DURATION = {'1':604800,'2':604800,'3':604800,'4':2628000,'5':7884000}
 				if target_user_id and target_username:
 					time_now = time.time()
-					banned = set_inter_user_ban(own_id=user_id, target_id=target_user_id, target_username=target_username, \
+					banned, ttl = set_inter_user_ban(own_id=user_id, target_id=target_user_id, target_username=target_username, \
 						ttl=CONVERT_DUR_CODE_TO_DURATION[second_decision], time_now=time_now, can_unban=can_unban, \
 						recent_joiner= True if (time_now-convert_to_epoch(request.user.date_joined)<TWENTY_MINS) else False)
-					if can_unban and banned:
+					if banned is None and ttl:
+						request.session["user_ban_cooloff_username"] = target_username
+						request.session["user_ban_cooloff_ttl"] = ttl
+						request.session["user_ban_change_status"] = '3'
+						request.session.modified = True
+						return redirect("banned_users_list")
+					elif can_unban and banned:
 						delete_ban_target_credentials(user_id)
 						if object_id and origin:
 							post_banning_tasks.delay(own_id=user_id, target_id=target_user_id, object_id=object_id, origin=origin)
@@ -151,10 +164,15 @@ def enter_inter_user_ban(request,*args,**kwargs):
 				else:
 					return redirect("banned_users_list")
 		elif initial_decision:
-			if not request.mobile_verified:
-				return redirect("inter_user_ban_not_permitted")
-			elif initial_decision == '1':
-				return render(request,"inter_user_ban.html",{'target_username':get_ban_target_credentials(own_id=user_id, username_only=True),'decide_time':True})
+			if initial_decision == '1':
+				is_verified = request.mobile_verified
+				if not is_verified:
+					return redirect("inter_user_ban_not_permitted")
+				elif is_verified:
+					return render(request,"inter_user_ban.html",{'target_username':get_ban_target_credentials(own_id=user_id, username_only=True),\
+						'decide_time':True})
+				else:
+					return redirect("inter_user_ban_not_permitted")
 			elif initial_decision == '0':
 				# take user to origin
 				delete_ban_target_credentials(user_id)
@@ -163,21 +181,22 @@ def enter_inter_user_ban(request,*args,**kwargs):
 			target_user_id = int(request.POST.get("tuid",None)[2:-2],16) #converting hex number to int
 			if target_user_id == user_id:
 				return redirect("home")
-			target_username = User.objects.filter(id=target_user_id).values_list('username',flat=True)
-			object_id, origin = request.POST.get("oid",None),request.POST.get("origin",None)
-			if target_username:
-				target_username = target_username[0]
-				save_ban_target_credentials(own_id=user_id, target_id=target_user_id, target_username=target_username, object_id=object_id, origin=origin)
-				banner_id, existing_ttl = is_already_banned(own_id=user_id, target_id=target_user_id, return_banner=True)
-				if existing_ttl is None or existing_ttl is False:
-					return render(request,"inter_user_ban.html",{'target_username':target_username,'to_ban':True})
-				else:
-					if banner_id == str(user_id):
-						return render(request,"inter_user_ban.html",{'target_username':target_username,'target_user_id':target_user_id,'already_banned':True, \
-							'banned_by':'self'})
+			elif target_user_id != user_id:
+				target_username = User.objects.filter(id=target_user_id).values_list('username',flat=True)
+				object_id, origin = request.POST.get("oid",None),request.POST.get("origin",None)
+				if target_username:
+					target_username = target_username[0]
+					save_ban_target_credentials(own_id=user_id, target_id=target_user_id, target_username=target_username, object_id=object_id, origin=origin)
+					banner_id, existing_ttl = is_already_banned(own_id=user_id, target_id=target_user_id, return_banner=True)
+					if existing_ttl is None or existing_ttl is False:
+						return render(request,"inter_user_ban.html",{'target_username':target_username,'to_ban':True})
 					else:
-						return render(request,"inter_user_ban.html",{'target_username':target_username,'target_user_id':target_user_id,'already_banned':True, \
-							'banned_by':'other'})
+						if banner_id == str(user_id):
+							return render(request,"inter_user_ban.html",{'target_username':target_username,'target_user_id':target_user_id,'already_banned':True, \
+								'banned_by':'self'})
+						else:
+							return render(request,"inter_user_ban.html",{'target_username':target_username,'target_user_id':target_user_id,'already_banned':True, \
+								'banned_by':'other'})
 			else:
 				return redirect("home")
 	else:
@@ -212,8 +231,14 @@ def ban_leaderboard(request):
 	return render(request,"global_banned_user_list.html",{'result':result})
 
 
+@cache_control(max_age=0, no_cache=True, no_store=True, must_revalidate=True)
+@csrf_protect
 def user_ban_help(request):
-	return render(request,"user_ban_help.html",{})
+	if request.method == 'POST':
+		target_username = request.POST.get('tunm',None)
+		return render(request,"user_ban_help.html",{'target_username':target_username,'decide_time':True})
+	else:
+		return render(request,"user_ban_help.html",{})
 
 
 # def export_block_error(request):

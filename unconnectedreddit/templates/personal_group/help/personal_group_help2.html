@@ -3,20 +3,7 @@
 <head><title>Private chat help page 2 | Damadam.pk</title></head>
 <style>
 
-body
-
-{background: #E9EBEE}
-
-
-
-.help {
-
-	display: flex;
-	justify-content: flex-start;
-	border-bottom: 1px solid lightgrey;
-	
-	
-}
+body{background: #E9EBEE}
 
 .helpitem {
 	padding:10px;
@@ -26,38 +13,42 @@ body
 
 	display:inline-block;
 	font-weight:bold;
-	 background-color:white; 
-	 border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
+	background-color:white; 
+	border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
     border-style: solid;
     border-width: 1px;
-    padding: 1px 7px 2px;"
+    padding: 1px 7px 2px;
 }
 
 </style>
 
-<body>
-	<div style="margin:0 auto; text-align:center;">
-	<h1 class="cxl"> Help Menu </h1>
-</div>
-<div class="bizcard" style="width:90%;  margin:0 auto; max-width:500px; border-radius:6px; background-color: white;">
-
-<div class="help">
-    <div class="helpitem"><button  class="re re-bg mrl" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDEBFE; border-radius: 1px 8px 1px 8px; border:none; cursor:default; padding-bottom:2px;"><div id="bplus-gr"></div></button> </div>
-    <div class="helpitem"> Is se ap apni mitai howi chat wapis la sakte hain</div>
+<div style="margin:0 auto;max-width:520px;width:92%;">
+<div style="margin:0 auto; text-align:center">
+	<h1 class="clb cxl mbs">Private Chat Help</h1>
 </div>
 
-<div class="help">
-    <div class="helpitem"><img src="/static/img/anon.svg"></div>
-    <div class="helpitem"> Is se ap apna nickname chat main ghayab kar sakte hain</div>
+{% if tid %}
+<form method="POST" style="text-align:center" class="mbl" action="{% url 'enter_personal_group' %}" >
+{% csrf_token %}
+<button name="tid" value="{{ tid }}" class="cl" style="padding:0;background:0 0;border:none;border-bottom:1px dotted #666666;color:#666666;border-radius:0">wapis</button>
+</form>
+{% endif %}
+
+<div class="clb bizcard cl" style="width:90%;  margin:0 auto; max-width:500px; border-radius:6px; background-color: white;">
+
+
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+    <div class="helpitem"><img src="{{ STATIC_URL }}img/anon.svg"></div>
+    <div class="helpitem lsp">Is se ap apna nickname chat main ghayeb kar sakte hain</div>
 </div>
 
-<div class="help">
-    <div class="helpitem"><img src="/static/img/photo.svg"></div>
-    <div class="helpitem"> Is main 4 option hain:
-        <ul> <b>- Allow:</b> Ap doosray ko pic send karne ki ijazat de sakte hain</ul>
-        <ul> <b>- Delete:</b> Ap apni share ki howi tamam pics aik saath delete kar sakte hain</ul>
-        <ul> <b>- Restore:</b> Ap apni delete ki howi tamam pics aik saath bahal kar sakte hain</ul>
-        <ul> <b>- All Photos:</b> Ap apni aur dusrey ki share ki howi tamam pics aik saath dekh sakte hain</ul>
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+    <div class="helpitem"><img src="{{ STATIC_URL }}img/photo.svg"></div>
+    <div class="helpitem lsp">Is main 4 options hain:<br>
+        <div class="mtl lsp"><b>- Allow:</b> Ap dusrey ko pic send karne ki ijazat de sakte hain</div>
+        <div class="mts lsp"><b>- Delete:</b> Ap apni share ki hui tamam pics aik sath delete kar sakte hain</div>
+        <div class="mts lsp"><b>- Restore:</b> Ap apni delete ki hui tamam pics aik sath bahal kar sakte hain</div>
+        <div class="mts mbs lsp"><b>- All Photos:</b> Ap apni aur dusrey ki share ki hui tamam pics aik sath dekh sakte hain</div>
     </div>
 </div>
 </div>
@@ -65,10 +56,16 @@ body
 <br>
 
 <div style="text-align:center">
-<a href="{% url 'personal_group_help1'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090">1</button></a>
-<a href="{% url 'personal_group_help2'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:black">2</button></a>
-<a href="{% url 'personal_group_help3'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090">3</button></a>
-<a href="{% url 'personal_group_help4'%}#section0" ><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090;">4</button></a></div>
-<br><br>
 
+<form method="POST" style="display:inline" action="{% url 'personal_group_help1'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">1</button></form>
+
+<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:black">2</button>
+
+<form method="POST" style="display:inline" action="{% url 'personal_group_help3'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">3</button></form>
+
+<form method="POST" style="display:inline" action="{% url 'personal_group_help4'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">4</button></form>
+
+</div>
+<br><br>
+</div>
 {% endblock %}

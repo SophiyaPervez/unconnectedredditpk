@@ -5,42 +5,48 @@
 
 <head><title>Blocked users | Damadam.pk</title></head>
 
-<div class="margin clb">
+<style>body{background: #E9EBEE}</style>
+<h1 class="cxl clb" style="text-align:center">Blocked Users</h1>
+<div class="clb bizcard" style="margin: 0 auto;max-width:520px;width:92%;padding:10px 8px;background-color:white">
 {% if status == '0' %}
-	<div class="mbl">
-	<span class="cl cr">Block khatam kar diya gaya!</span><br>
+	<div class="mbl" style="text-align:center">
+	<span class="cl cr lsp">Block khatam kar diya gaya!</span>
 	</div>
+    <hr size=1 COLOR="#E9EBEE">
 {% elif status == '1' %}
-	<div class="mbl">
-	<span class="cl cr">Block ka time change kar diya gaya!</span><br>
+	<div class="mbl" style="text-align:center">
+	<span class="cl cr lsp">Block ka time change kar diya gaya!</span>
 	</div>
+    <hr size=1 COLOR="#E9EBEE">
 {% elif status == '2' %}
-	<div class="mbl">
-	<span class="cl cr">Block change nahi ho saka!</span><br>
+	<div class="mbl" style="text-align:center">
+	<span class="cl cr">Block change nahi ho saka!</span>
 	</div>
+    <hr size=1 COLOR="#E9EBEE">
+{% elif status == '3' %}
+    <div class="mbl" style="text-align:center">
+    <span class="cl cr lsp">Ap {{ target_username }} ko dubara block kar sakein ge {{ cooloff_ttl|future_time }}</span><br>
+    </div>
+    <hr size=1 COLOR="#E9EBEE">
 {% else %}
-	<h2>Blocked users:</h2>
+
 {% endif %}
 {% for banned_user, ttl in banned_users_with_ttl %}
-	<span class="cgy cs">{{ forloop.counter }}.
+	<span class="cgy cs"><span class="cxs">{{ forloop.counter }}.</span>
 	<a href="{% url 'profile' slug=banned_user.username %}#section0">
-        {% if banned_user.userprofile.avatar %}
-            <img src='{{ banned_user.userprofile.avatar|s3:"thumb" }}' width="22" height="22" alt="no pic"></img>
-        {% else %}
-            <img src="{{ STATIC_URL }}img/default-avatar-min.jpg" width="22" height="22" alt="no pic"></img>
-        {% endif %}
+        <img src='{{ banned_user.userprofile.avatar|s3:"thumb" }}' width="22" height="22" alt="pic" style="border-radius:50%">
         <b class="cb cl"><bdi>{{ banned_user.username }}</bdi></b>
         {% if banned_user.username in females %}
-            <img src="{{ STATIC_URL }}img/pstar.png" width="13" height="13" alt="no pic">
+            <img src="{{ STATIC_URL }}img/pstar.png" width="13" height="13" alt="star">
         {% endif %}
-        </a></span>&nbsp;<span class="cgy cs">{{ ttl|future_time }}&nbsp;block khatam ho ga</span>&nbsp; 
+        </a></span>&nbsp;<span class="cgy cs mrs">{{ ttl|future_time }}&nbsp;block end ho ga</span>&nbsp; 
         <form action="{% url 'change_ban_time' %}" method="POST" style="display:inline">
         {% csrf_token %}
         <input type="hidden" name="buid" value="{{ banned_user.id }}">
-        <button name="bun" class="btn bcgy bs cs mls mbs mts" type="submit" value="{{ banned_user.username }}">&nbsp;change&nbsp;</button>
+        <button name="bun" class="cs mbs mts" style="border:none;background:0 0;padding:0;border-bottom:1px dotted gray;border-radius:0" type="submit" value="{{ banned_user.username }}">change</button>
         </form><br>
 	{% empty %}
-	<span class="cgy cl">Is waqt aap ne kisi ko block nahi kiya hua</span>
+	<div class="clb cxl lsp" style="text-align:center">Is waqt aap ne kisi ko block nahi kiya hua</div>
 {% endfor %}
 </div>
 <br><br>

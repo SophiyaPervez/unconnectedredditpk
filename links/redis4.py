@@ -1,12 +1,13 @@
 
 # coding=utf-8
+import ujson as json
 import redis, time, random
 from datetime import datetime
 from django.contrib.auth.models import User
 from location import REDLOC4
 from score import BAN_REASON, RATELIMIT_TTL, SUPER_FLOODING_THRESHOLD, FLOODING_THRESHOLD, LAZY_FLOODING_THRESHOLD, SHORT_MESSAGES_ALWD, \
 SHARED_PHOTOS_CEILING, PHOTO_DELETION_BUFFER
-from models import UserProfile
+from models import UserProfile, Photo
 
 '''
 ##########Redis Namespace##########
@@ -42,8 +43,13 @@ hrit:<user_id> - home reply input text (list holding text of home replies for a 
 
 sm:<user_id>:<section>:<obj_id> - counter to count short messages sent on home objects
 
+user_id:<username> is a key containing user_ids of certain usernames
 uname:<user_id> is a hash containing username and avatar_url data of a user
+pht:<photo_id> is a hash containing image_url and caption data of a photo posted by user
+phd:<user_id> contains cached photo sharing data for a specific user_id (cached for 20 mins)
 aurl:<user_id> is 'avatar_uploading_rate_limit', and is used to rate limit how frequently a user can change their avatar
+
+vb:<star_id>:<visitor_id> 'visited_by' key that stores which star_id was visited by which visitor_id
 
 ------------ Personal Group Metrics ------------
 
@@ -85,6 +91,7 @@ THREE_DAYS = 60*60*24*3
 ONE_DAY = 60*60*24
 ONE_HOUR = 60*60
 TWELVE_HOURS = 60*60*12
+THIRTY_MINS = 30*60
 TWENTY_MINS = 20*60
 TEN_MINS = 10*60
 SEVEN_MINS = 7*60
@@ -92,6 +99,9 @@ FIVE_MINS = 5*60
 THREE_MINS = 3*60
 ONE_MIN = 60
 
+
+def convert_to_epoch(time):
+	return (time-datetime(1970,1,1)).total_seconds()
 
 
 def save_deprecated_photo_ids_and_filenames(deprecated_photos):
@@ -264,7 +274,7 @@ def get_cached_meta_data(url):
 		return {}
 
 
-###################### Photo dimensions caching ######################
+###################### Photo dimensions and data caching ######################
 
 def get_cached_photo_dim(photo_id):
 	"""
@@ -284,6 +294,30 @@ def cache_photo_dim(photo_id,img_height,img_width):
 	my_server = redis.Redis(connection_pool=POOL)
 	my_server.hmset(key,mapping)
 	my_server.expire(key,THREE_DAYS)
+
+
+def retrieve_photo_data(photo_ids, owner_id):
+	"""
+	Retrieves photo data (caption and url)
+	"""
+	my_server = redis.Redis(connection_pool=POOL)
+	photo_data, missing_photos = {}, []
+	for photo_id in photo_ids:
+		caption, image_url, upload_time = my_server.hmget('pht:'+photo_id,'caption','image_url','upload_time')
+		if caption and image_url and upload_time:
+			photo_data[photo_id] = {'caption':caption.decode('utf-8'),'image_url':image_url,'id':photo_id,'upload_time':upload_time}
+		else:
+			missing_photos.append(photo_id)
+	if missing_photos:
+		missing_data = Photo.objects.filter(id__in=missing_photos).values('id','image_file','caption','upload_time')
+		for data in missing_data:
+			photo_id = str(data['id'])
+			key = 'pht:'+photo_id
+			upload_time = str(convert_to_epoch(data['upload_time']))
+			photo_data[photo_id] = {'caption':data['caption'],'image_url':data['image_file'],'id':photo_id,'upload_time':upload_time}
+			my_server.hmset(key,{'caption':data['caption'],'image_url':data['image_file'],'upload_time':upload_time})
+			my_server.expire(key,THREE_DAYS)
+	return photo_data
 
 ###################### User credentials caching ######################
 
@@ -484,12 +518,32 @@ def retrieve_credentials(user_id,decode_uname=False):
 		pipeline1.execute()
 		return username, avurl
 
+
+def retrieve_user_id(username):
+	"""
+	Returns user's user_id (for a given username)
+	"""
+	key = 'user_id:'+username
+	my_server = redis.Redis(connection_pool=POOL)
+	user_id = my_server.get(key)
+	if user_id:
+		my_server.expire(key,THREE_DAYS)# extend lease for 3 days
+		return user_id
+	else:
+		try:
+			user_id = User.objects.filter(username=username).values_list('id',flat=True)[0]
+		except IndexError:
+			return None
+		my_server.setex(key,user_id,ONE_DAY)
+		return str(user_id)
+
+
 def retrieve_avurl(user_id):
 	"""
 	Returns user's avatar_url
 	"""
-	my_server = redis.Redis(connection_pool=POOL)
 	hash_name = 'uname:'+str(user_id)
+	my_server = redis.Redis(connection_pool=POOL)
 	avurl = my_server.hget(hash_name,'avurl')
 	if not avurl:
 		avurl = UserProfile.objects.filter(user_id=user_id).values_list('avatar',flat=True)[0]
@@ -1028,6 +1082,7 @@ def log_input_text(section, section_id,text,user_id):
 	my_server.ltrim(key,0,3) # keeping previous 4 sentences
 	my_server.expire(key,TEN_MINS)
 
+
 def retrieve_previous_msgs(section, section_id,user_id):
 	"""
 	retrieve previous messages stored for a certain section_id
@@ -1043,6 +1098,7 @@ def retrieve_previous_msgs(section, section_id,user_id):
 	elif section == 'home_rep':
 		key = "hrit:"+str(user_id)+":"+str(section_id)
 	return redis.Redis(connection_pool=POOL).lrange(key,0,-1)
+
 
 ############################ Ratelimiting short messages ###############################
 
@@ -1115,15 +1171,16 @@ def log_share(photo_id, photo_owner_id, sharer_id, share_type='undefined', origi
 		pass
 
 
+
 def logging_sharing_metrics(sharer_id, photo_id, photo_owner_id, num_shares, sharing_time, group_ids):
 	"""
 	Logs metrics for photos shared internally (from public albums to personal groups)
 
 	This is a separate functionality from sharing via Whatsapp
 	"""
-	my_server = redis.Redis(connection_pool=POOL)
 	sharer_id, num_shares, sharing_time = str(sharer_id), str(num_shares), str(sharing_time)
 	key = "sp:"+photo_owner_id
+	my_server = redis.Redis(connection_pool=POOL)
 	pipeline1 = my_server.pipeline()
 	
 	# use this to calculate total shares in the last week, also total all_time shares (list resets if user inactive for two weeks)
@@ -1176,6 +1233,46 @@ def logging_sharing_metrics(sharer_id, photo_id, photo_owner_id, num_shares, sha
 # 		else:
 # 			pass
 
+def cache_photo_share_data(json_data,user_id):
+	"""
+	Caches photo sharing data of given user_id for twenty mins
+	"""
+	redis.Redis(connection_pool=POOL).setex('phd:'+user_id,json_data,TWENTY_MINS)
+
+
+def retrieve_fresh_photo_shares_or_cached_data(user_id):
+	"""
+	Returns shared photos of user_id
+	"""
+	my_server = redis.Redis(connection_pool=POOL)
+	cached_photo_data = my_server.get('phd:'+user_id)
+	if cached_photo_data:
+		return json.loads(cached_photo_data), True
+	else:
+		return my_server.zrange("sp:"+user_id,0,-1), False
+
+
+def logging_profile_view(visitor_id,star_id,viewing_time):
+	"""
+	Logs profile view if a visitor visits
+
+	Only last 24 hours are preserved
+	Ensures self visits don't count
+	Ensures repeat visits don't count
+	"""
+	star_id = str(star_id)
+	one_day_ago = viewing_time - ONE_DAY
+	viewing_time = str(viewing_time)
+	visitor_id = str(visitor_id)
+	key = "vb:"+star_id+":"+visitor_id
+	my_server = redis.Redis(connection_pool=POOL)
+	if not my_server.get(key):
+		# can log visit
+		sorted_set = 'pf:'+star_id
+		my_server.zremrangebyscore(sorted_set,'-inf',one_day_ago)#purging old data
+		my_server.zadd(sorted_set,visitor_id+":"+viewing_time,viewing_time)
+		my_server.expire(sorted_set,ONE_DAY)#this expires if no new views appear for 24 hours
+		my_server.setex(key,'1',THIRTY_MINS)
 
 ########################################### Gathering Metrics for Personal Groups ###########################################
 

@@ -12,7 +12,7 @@
 	{% if forloop.counter != 1 %}<hr size=1 COLOR="#e0e0e0">{% endif %}
 	<div style="overflow:hidden">
 	<div itemscope itemtype="http://schema.org/CreativeWork">
-	<span itemprop="author">{{ reply.reply_head|safe }}</span>:&nbsp;<span class="cdt bw" itemprop="comment"><bdi>{% emoticons %}{{ reply.text }}{% endemoticons %}</bdi></span><span itemprop="datePublished" class="cgy cs">, {{ reply.epoch_time|human_time }}</span> &nbsp;{% block_button reply.replier_id reply.replier_username self_user_id reply.link_id 'home:reply' static_url %}{% if score > 25 and reply.replier_id|slugify != self_user_id|slugify %}&nbsp;<a href="{% url 'mehfilhelp' pk=reply.replier_id num=reply.link_id %}"><button class="mls mrs btn bct bs cxs"><b>mehfil</b></button></a>{% group_button self_user_id reply.replier_id reply.link_id 'link' 'home_reply' reply.replier_username %}{% endif %}
+	<span itemprop="author">{{ reply.reply_head|safe }}</span>:&nbsp;<span class="cdt bw lsp" itemprop="comment"><bdi>{% emoticons %}{{ reply.text }}{% endemoticons %}</bdi></span><span itemprop="datePublished" class="cgy cs">, {{ reply.epoch_time|human_time }}</span> &nbsp;{% block_button reply.replier_id reply.replier_username self_user_id reply.link_id 'home:reply' static_url %}{% if score > 25 and reply.replier_id|slugify != self_user_id|slugify %}&nbsp;<a href="{% url 'mehfilhelp' pk=reply.replier_id num=reply.link_id %}"><button class="mls mrs btn bct bs cxs"><b>mehfil</b></button></a>{% group_button self_user_id reply.replier_id reply.link_id 'link' 'home_reply' reply.replier_username %}{% endif %}
 	</div>
 	</div>
 	</td></tr>

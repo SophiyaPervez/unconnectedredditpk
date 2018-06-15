@@ -26,7 +26,7 @@ personal_group_hard_deletion, exited_personal_group_hard_deletion, update_person
 rate_limit_personal_group_sharing
 from redis4 import expire_online_users, get_recent_online, set_online_users, log_input_rate, log_input_text, retrieve_uname, retrieve_avurl, \
 retrieve_credentials, invalidate_avurl, increment_convo_counter, increment_session, track_p2p_sms, check_p2p_sms, log_personal_group_exit_or_delete,\
-log_share, logging_sharing_metrics#, log_photo_attention_from_fresh
+log_share, logging_sharing_metrics, cache_photo_share_data, logging_profile_view#, log_photo_attention_from_fresh
 from redis2 import set_benchmark, get_uploader_percentile, bulk_create_photo_notifications_for_fans, remove_erroneous_notif,\
 bulk_update_notifications, update_notification, create_notification, update_object, create_object, add_to_photo_owner_activity,\
 get_active_fans, public_group_attendance, clean_expired_notifications, get_top_100,get_fan_counts_in_bulk, get_all_fans, is_fan, \
@@ -126,6 +126,15 @@ def punish_gibberish_writers(dict_of_targets):
 		UserProfile.objects.filter(user_id=user_id).update(score=F('score')-score_penalty)
 		queue_punishment_amount(user_id,score_penalty)
 
+
+@celery_app1.task(name='tasks.log_profile_view')
+def log_profile_view(visitor_id,star_id,viewing_time):
+	logging_profile_view(visitor_id,star_id,viewing_time)
+
+
+@celery_app1.task(name='tasks.cache_photo_shares')
+def cache_photo_shares(json_photo_data, user_id):
+	cache_photo_share_data(json_photo_data, user_id)
 
 @celery_app1.task(name='tasks.invalidate_avatar_url')
 def invalidate_avatar_url(user_id,set_rate_limit=False):
@@ -411,6 +420,7 @@ def calc_gibberish_punishment():
 				all_gibberish_writers_above_threshold[k] *= GIBBERISH_PUNISHMENT_MULTIPLIER
 			punish_gibberish_writers(all_gibberish_writers_above_threshold)
 
+
 @celery_app1.task(name='tasks.calc_photo_quality_benchmark')
 def calc_photo_quality_benchmark():
 	two_days = datetime.utcnow()-timedelta(hours=24*2)
@@ -637,7 +647,6 @@ def set_input_rate_and_history(section,section_id,text,user_id,time_now):
 	Keeps check of writing rates to rate limit abusive users
 	"""
 	log_input_text(section, section_id,text,user_id)
-	# log_input_rate(section,user_id,time_now,text)
 	log_input_rate(section,user_id,time_now)
 
 @celery_app1.task(name='tasks.rank_photos')

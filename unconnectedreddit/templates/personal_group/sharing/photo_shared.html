@@ -39,7 +39,7 @@
 	{% if disallwd_friends %}
 		<div class="mt">
 		{% if num_unsent > 1 %}
-			<div class="cl lsp cgy">Ye foto in dostoon ko nahi bheji ja saki kiyun ke inhoon ne apko foto bhejney ki ijazat nahi di hui:</div>
+			<div class="cl lsp cgy">Sorry! Ye foto in dostoon ko nahi bheji ja saki kiyun ke inhoon ne apko foto bhejney ki ijazat nahi di hui:</div>
 			
 			<form class="lsp" method="POST" action="{% url 'enter_personal_group' %}">
 			{% csrf_token %}
@@ -49,7 +49,7 @@
 			</form>
 			
 		{% elif num_unsent == 1 %}
-			<div class="cl lsp cgy">{% if disallwd_friends.0.is_anon == '1' %}Ye foto <form method="POST" action="{% url 'enter_personal_group' %}" style="display:inline">{% csrf_token %}<button name="tid" class="cm" style="background:0 0;padding:0;border:none" value="{{ disallwd_friends.0.friend_id }}"><div class="av_btn" style="border:1px solid lightgray;width:22px;height:22px;color:gray;line-height:23px">{{ disallwd_friends.0.friend_uname|truncap }}</div></button></form> ko nahi bheji geyi kiyun ke us ne apko foto bhejney ki ijazat nahi di hui{% else %}Ye foto <form method="POST" action="{% url 'enter_personal_group' %}" style="display:inline">{% csrf_token %}<button name="tid" class="cm" style="font-weight:bold;border:none;border-bottom:1px dotted gray;background:0 0;padding:0;color:gray" value="{{ disallwd_friends.0.friend_id }}">{{ disallwd_friends.0.friend_uname }}</button></form> ko nahi bheji geyi kiyun ke us ne apko foto bhejney ki ijazat nahi di hui{% endif %}</div>
+			<div class="cl lsp cgy">{% if disallwd_friends.0.is_anon == '1' %}Sorry! Ye foto <form method="POST" action="{% url 'enter_personal_group' %}" style="display:inline">{% csrf_token %}<button name="tid" class="cm" style="background:0 0;padding:0;border:none" value="{{ disallwd_friends.0.friend_id }}"><div class="av_btn" style="border:1px solid lightgray;width:22px;height:22px;color:gray;line-height:23px">{{ disallwd_friends.0.friend_uname|truncap }}</div></button></form> ko nahi bheji geyi kiyun ke us ne apko foto bhejney ki ijazat nahi di hui{% else %}Sorry! Ye foto <form method="POST" action="{% url 'enter_personal_group' %}" style="display:inline">{% csrf_token %}<button name="tid" class="cm" style="font-weight:bold;border:none;border-bottom:1px dotted gray;background:0 0;padding:0;color:gray" value="{{ disallwd_friends.0.friend_id }}">{{ disallwd_friends.0.friend_uname }}</button></form> ko nahi bheji geyi kiyun ke us ne apko foto bhejney ki ijazat nahi di hui{% endif %}</div>
 		{% endif %}
 		</div>
 	{% endif %}
@@ -64,6 +64,8 @@
 	<a href="{% url 'user_profile_photo' photo_owner_username photo_id %}">
 	{% elif origin == '5' %}
 	<a href="{% url 'unseen_activity' user.username %}">
+	{% elif origin == '6' %}
+	<a href="{% url 'show_shared_photo_metrics' photo_owner_username %}">
 	{% else %}
 	<a href="{% url 'home' %}">
 	{% endif %}

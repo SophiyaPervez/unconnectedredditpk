@@ -3,19 +3,7 @@
 <head><title>Private chat help page 2 | Damadam.pk</title></head>
 <style>
 
-body
-
-{background: #E9EBEE}
-
-
-
-.help {
-
-	display: flex;
-	justify-content: flex-start;
-	border-bottom: 1px solid lightgrey;
-	
-}
+body{background: #E9EBEE}
 
 .helpitem {
 	padding:10px;
@@ -29,28 +17,35 @@ body
 	 border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
     border-style: solid;
     border-width: 1px;
-    padding: 1px 7px 2px;"
+    padding: 1px 7px 2px;
 }
 
 </style>
-
-<body>
-	<div style="margin:0 auto; text-align:center;">
-	<h1 class="cxl"> Help Menu </h1>
-</div>
-<div class="bizcard" style="width:90%;  margin:0 auto; max-width:500px; border-radius:6px; background-color: white;">
-
-<div class="help">
-	<div class="helpitem"><img src="/static/img/delundel.svg"></div>
-	<div class="helpitem"> Ap apni sari chat aik hi button daba kar mita sakte hain</div>
+<div style="margin:0 auto;max-width:520px;width:92%;">
+<div style="margin:0 auto; text-align:center">
+	<h1 class="cxl clb mbs">Private Chat Help</h1>
 </div>
 
-<div class="help">
-	<div class="helpitem"><img src="/static/img/sv.svg"></div>
-	<div class="helpitem"> Is main 3 option hain:
-		<ul> <b>- Allow Saving:</b> Ap doosray ko apki chat save karne ki ijazat de sakte hain</ul>
-		<ul> <b>- Delete:</b> Ap apni tamam saved chat aik saath delete kar sakte hain</ul>
-		<ul> <b>- All Saved Chat:</b> Ap apni tamam saved chat ko dekh sakte hain</ul>
+{% if tid %}
+<form method="POST" style="text-align:center" class="mbl" action="{% url 'enter_personal_group' %}" >
+{% csrf_token %}
+<button name="tid" value="{{ tid }}" class="cl" style="padding:0;background:0 0;border:none;border-bottom:1px dotted #666666;color:#666666;border-radius:0">wapis</button>
+</form>
+{% endif %}
+
+<div class="bizcard clb cl" style="width:90%;  margin:0 auto; max-width:500px; border-radius:6px; background-color: white;">
+
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem"><img src="{{ STATIC_URL }}img/delundel.svg"></div>
+	<div class="helpitem lsp">Ap apni sari chat aik hi button daba kar mita sakte hain</div>
+</div>
+
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem"><img src="{{ STATIC_URL }}img/sv.svg"></div>
+	<div class="helpitem lsp">Is main 3 options hain:<br>
+		<div class="mtl lsp"><b>- Allow Saving:</b> Ap dusrey ko apki chat save karne ki ijazat de sakte hain</div>
+		<div class="mts lsp"><b>- Delete:</b> Ap apni tamam saved chat aik sath delete kar sakte hain</div>
+		<div class="mts mbs lsp"><b>- All Saved Chat:</b> Ap apni tamam saved chat ko dekh sakte hain</div>
 	</div>
 </div>
 
@@ -58,10 +53,15 @@ body
 
 <br>
 <div style="text-align:center">
-<a href="{% url 'personal_group_help1'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090">1</button></a>
-<a href="{% url 'personal_group_help2'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090">2</button></a>
-<a href="{% url 'personal_group_help3'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:black">3</button></a>
-<a href="{% url 'personal_group_help4'%}#section0" ><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090;">4</button></a></div>
+<form method="POST" style="display:inline" action="{% url 'personal_group_help1'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">1</button></form>
+
+<form method="POST" style="display:inline" action="{% url 'personal_group_help2'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">2</button></form>
+
+<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:black">3</button>
+
+<form method="POST" style="display:inline" action="{% url 'personal_group_help4'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">4</button></form>
+</div>
+</div>
 <br><br>
 
 {% endblock %}

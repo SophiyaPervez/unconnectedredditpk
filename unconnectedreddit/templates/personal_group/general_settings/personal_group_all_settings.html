@@ -86,6 +86,15 @@
 		</td>
 		<td><div class="lsp">Ye dabain is chat se hamesha ke liye bahir janey ke liye</div></td>
 		</tr>
+		<tr>
+		<td>
+			<form method="POST" action="{% url 'personal_group_help1' %}">
+			{% csrf_token %}
+			<button type="submit" class="bizcard st-bg" name="tid" value="{{ tid }}"><img src="{{ STATIC_URL }}img/help.svg" width="60" height="60"></button>
+			</form>
+		</td>
+		<td><div class="lsp">Ye dabain private chat pe help hasil karney ke liye</div></td>
+		</tr>
 		</table>
 
 	<form method="POST" action="{% url 'enter_personal_group' %}" style="text-align:center">

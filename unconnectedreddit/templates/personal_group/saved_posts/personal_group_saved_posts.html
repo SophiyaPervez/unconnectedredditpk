@@ -165,6 +165,18 @@
                   <span class="lsp cl"><bdi>{% emoticons %}{{ post.text }}{% endemoticons %}</bdi></span>
                 </div>
 
+             {% elif post.type == 'shared_img' %}
+             
+              {% if post.hidden == 'no' %}
+                <div class="mbs">
+                 {% personal_group_big_photo img_url=post.shared_img|s3 img_caption=post.img_caption|emoticons css_shadow='sh-r' max_width=post.img_width static_url=STATIC_URL original_poster=post.owner_uname %}  
+               </div>
+              {% elif post.hidden == 'yes' %}
+                 <div class="mbs">
+                  {% personal_group_hidden_pht_big max_width=post.img_width hw_ratio=post.img_hw_ratio css_shadow='sh-r' right_align='ral' %}
+                </div>
+              {% endif %}
+
              {% elif post.type == 'img' %}
              
                 {% if post.hidden == 'no' %}
@@ -254,7 +266,7 @@
                           <div class="mbs">{% personal_group_deleted_post_message inset_color='white' shadow_base_color='#00E699' %}</div>
                       {% elif post.t_type == 'text' %}
                           <div class="lsp mbs"><bdi>{% emoticons %}{{ post.t_content|truncatechars:75 }}{% endemoticons %}</bdi></div>
-                      {% elif post.t_type == 'img' %}
+                      {% elif post.t_type == 'img' or post.t_type == 'shared_img' %}
                           
                             {% if post.t_hidden == 'yes' %}
                             <div class="mbl mtl">
@@ -309,6 +321,22 @@
                       <div class="mbs">
                         <span class="cl"><bdi>{% emoticons %}{{ post.text }}{% endemoticons %}</bdi></span>
                       </div>
+                   {% elif post.type == 'shared_img' %}
+                      
+                      {% if post.hidden == 'no' %}
+
+                        <div class="mbs">
+                          {% personal_group_big_photo img_url=post.shared_img|s3 img_caption=post.img_caption|emoticons css_shadow='sh-l' max_width=post.img_width static_url=STATIC_URL original_poster=post.owner_uname %}<br>
+                        </div>
+
+                      {% elif post.hidden == 'yes' %}
+                       
+                        <div class="mbs">
+                          {% personal_group_hidden_pht_big max_width=post.img_width hw_ratio=post.img_hw_ratio css_shadow='sh-l' right_align='' %}
+                        </div>
+                       
+                      {% endif %}
+
                    {% elif post.type == 'img' %}
                  
                       {% if post.hidden == 'no' %}
@@ -401,7 +429,7 @@
                             </div>
                           {% elif post.t_type == 'text' %}
                               <div class="lsp mbs"><bdi>{% emoticons %}{{ post.t_content|truncatechars:75 }}{% endemoticons %}</bdi></div>
-                          {% elif post.t_type == 'img' %}
+                          {% elif post.t_type == 'img' or post.t_type == 'shared_img' %}
                               
                              {% if post.t_hidden == 'no' %}
                                

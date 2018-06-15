@@ -52,7 +52,7 @@
 		
 		<div style="text-align:center">
 		<img src='{{ photo_url|s3:"thumb" }}' style="border-radius:5px;overflow:hidden;background-color:#f9e1bb;text-align:left" height="38" class="cxs sp mrs" alt="pic">
-		<span class="cs cgy">{{ photo_caption|truncatechars:'23' }}</span>
+		<span class="cs clb">{% emoticons %}{{ photo_caption|truncatechars:'23' }}{% endemoticons %}</span>
 		</div>
 
 		{% if no_friends %}
@@ -74,12 +74,7 @@
 
 		{% else %}
 			
-			<hr size=1 COLOR="#E9EBEE">
-			<div style="text-align:center">
-			<div class="cl lsp">
-			Ye foto kin dostoon ki private chat mein share karni hai?
-			</div>
-			<div class="mt mbs">
+			<div style="text-align:center" class="cl mt mbs">
 			{% if origin == '1' %}
 			<a href="{% url 'home' %}" class="cgy cs sp" style="border-bottom:1px dotted gray">wapis</a>
 			{% elif origin == '2' %}
@@ -94,13 +89,20 @@
 			<a href="{% url 'home' %}" class="cgy cs sp" style="border-bottom:1px dotted gray">wapis</a>
 			{% endif %}
 			</div>
+
+			<hr size=1 COLOR="#E9EBEE">
+			<div style="text-align:center">
+			<div class="cl lsp">
+			Ye foto kin dostoon ki private chat mein share karni hai?
+			</div>
 			<form method="POST" action="{% url 'share_photo_in_personal_group' %}">
 				{% csrf_token %}
 				<input type="hidden" name="dm" value="1">
+				{% if num_friends > 6 %}<button class="btn bm bcb sp mtl mbl pg_ok_res" style="height:26px">share</button><br>{% endif %}
 				<ul style="display:inline-block;padding: 0;list-style: none">
 				{% for group_id,friend in friend_data %}
 				<li style="text-align:left" class="mbl">
-				<input style="vertical-align:middle" type="checkbox" name="gid" value="{{ group_id }}:{{ friend.is_anon }}:{{ friend.avurl }}:{{ friend.fid }}:{{ friend.uname }}" id="{{ group_id }}"><label for="{{ group_id }}">{% if friend.is_anon == '1' %}<div class="mls av_btn sbb mrs" style="width:22px;height:22px;color:#01579B;line-height:23px">{{ friend.uname|truncap }}</div>{% else %}<img src="{{ friend.avurl|s3:'thumb' }}" class="mls mrs" style="border-radius:50%;vertical-align:text-bottom;padding:0"><b class="cl mrs" style="color:#01579B">{{ friend.uname|truncatechars:'17' }}</b>{% endif %}<span class="cxs sp cgy">you messaged {{ friend.last_seen|human_time }}</span></label>
+				<input style="vertical-align:middle" type="checkbox" name="gid" value="{{ group_id }}:{{ friend.is_anon }}:{{ friend.avurl }}:{{ friend.fid }}:{{ friend.uname }}" id="{{ group_id }}"><label for="{{ group_id }}">{% if friend.is_anon == '1' %}<div class="mls av_btn sbb mrs" style="width:22px;height:22px;color:#01579B;line-height:23px">{{ friend.uname|truncap }}</div>{% else %}<img src="{{ friend.avurl|s3:'thumb' }}" class="mls mrs" style="border-radius:50%;vertical-align:text-bottom;padding:0"><b class="cl mrs" style="color:#01579B">{{ friend.uname|truncatechars:'17' }}</b>{% endif %}<span class="cxs sp cgy">messaged {{ friend.last_seen|human_time }}</span></label>
 				</li>
 				{% endfor %}
 				</ul>

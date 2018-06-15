@@ -22,6 +22,7 @@ my_server.lpush("ala:"+str(locker_id),ad_id) # agent's locked ads (ala:)
 pipeline1.zincrby("at:"+ad_city,ad_town,amount=1) # approved towns within a city
 key_name = "b:"+str(low)+":"+str(high) #stores ban data
 my_server.zrange("bl:"+str(own_id),0,-1) # a user's block-list
+blrl:<own_id>:<target_id> is a rate limiting key set when a user unblocks another user
 server.lpush("ecomm_clicks",(user_id, ad_id, time_now)) # recording the click in a list of tuples
 pipeline1.sadd("sn:"+ad_id,clicker_id) #saving who all has already seen the seller's number. "sn:" stands for 'seen number'
 pipeline1.zincrby("approved_locations",city,amount=1)
@@ -67,6 +68,7 @@ FIFTEEN_MINS = 15*60
 FORTY_FIVE_MINS = 60*45
 TWO_HOURS = 2*60*60
 SIX_HOURS = 6*60*60
+ONE_DAY = 24*60*60
 ONE_WEEK = 1*7*24*60*60
 TWO_WEEKS = 2*7*24*60*60
 ONE_MONTH = 30*24*60*60
@@ -476,6 +478,11 @@ def remove_banned_users_in_bulk(own_id, ids_to_remove_from_ban_list):
 
 
 def remove_single_ban(own_id, target_id):
+	"""
+	Removes blocked user from block list
+
+	Rate limits users from banning said user again
+	"""
 	my_server = redis.Redis(connection_pool=POOL)
 	low, high = (own_id, target_id) if int(own_id) < int(target_id) else (target_id, own_id)
 	key_name = "b:"+str(low)+":"+str(high)
@@ -486,6 +493,7 @@ def remove_single_ban(own_id, target_id):
 		pipeline1 = my_server.pipeline()
 		pipeline1.delete(key_name)
 		pipeline1.zrem("bl:"+own_id,target_id)
+		pipeline1.setex("blrl:"+own_id+":"+target_id,'1',ONE_DAY)
 		pipeline1.execute()
 		return True
 	else:
@@ -517,25 +525,33 @@ def is_already_banned(own_id, target_id, key_name=None, server=None, return_bann
 			return False
 
 def set_inter_user_ban(own_id, target_id, target_username, ttl, time_now, can_unban, recent_joiner):
-	my_server = redis.Redis(connection_pool=POOL)
+	"""
+	Bans a given target user by setting relevant data in redis
+	"""
 	low, high = (own_id, target_id) if int(own_id) < int(target_id) else (target_id, own_id)
 	key_name = "b:"+str(low)+":"+str(high)
-	existing_ttl = is_already_banned(own_id=own_id, target_id=target_id, key_name=key_name, server=my_server)
-	if existing_ttl is None or existing_ttl is False or can_unban == '1':
-		pipeline1 = my_server.pipeline()
-		# a 'solitary' key, to help make quick decision on whether an interaction is to be allowed or not
-		pipeline1.setex(key_name,own_id,ttl)
-		# combined with 'solitary' keys above, this helps populate a list of all banned people for the user to see
-		pipeline1.zadd("bl:"+str(own_id),target_id, time_now)
-		# only add to the global list if it was NOT a re-ban
-		if not can_unban and recent_joiner:
-			#if list consistently shows ugly nicks, can 'auto-ban' top 10 from this list. Trim and update a copy of this list after every 5 mins
-			#pipeline1.zincrby("global_inter_user_ban_list",target_id, amount=(time_now/1200)) #1200 seconds are worth 4 ban 'votes'
-			pipeline1.zincrby("malicious_user_list",target_id,amount=1)
-		pipeline1.execute()
-		return True
+	my_server = redis.Redis(connection_pool=POOL)
+	cooloff_ttl = my_server.ttl("blrl:"+str(own_id)+":"+target_id)
+	if cooloff_ttl > 0:
+		return None, cooloff_ttl
 	else:
-		return False
+		existing_ttl = is_already_banned(own_id=own_id, target_id=target_id, key_name=key_name, server=my_server)
+		if existing_ttl is None or existing_ttl is False or can_unban == '1':
+			pipeline1 = my_server.pipeline()
+			# a 'solitary' key, to help make quick decision on whether an interaction is to be allowed or not
+			pipeline1.setex(key_name,own_id,ttl)
+			# combined with 'solitary' keys above, this helps populate a list of all banned people for the user to see
+			pipeline1.zadd("bl:"+str(own_id),target_id, time_now)
+			# only add to the global list if it was NOT a re-ban
+			if not can_unban and recent_joiner:
+				#if list consistently shows ugly nicks, can 'auto-ban' top 10 from this list. Trim and update a copy of this list after every 5 mins
+				#pipeline1.zincrby("global_inter_user_ban_list",target_id, amount=(time_now/1200)) #1200 seconds are worth 4 ban 'votes'
+				pipeline1.zincrby("malicious_user_list",target_id,amount=1)
+			pipeline1.execute()
+			return True, None
+		else:
+			return False, None
+
 
 def get_global_ban_leaderboard():
 	my_server = redis.Redis(connection_pool=POOL)
@@ -1734,6 +1750,7 @@ def get_ranked_public_groups():
 '1' 'personal group sms settings'
 '2' 'granting permission to save posts'
 '3' 'sharing internal photo in personal groups'
+'4' 'visiting shared photos listing'
 
 def tutorial_unseen(user_id, which_tut, renew_lease=False):
 	my_server = redis.Redis(connection_pool=POOL)

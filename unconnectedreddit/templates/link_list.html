@@ -97,7 +97,7 @@
 		{{ link.au|safe }}
 		{{ link.n }} {{ link.p|safe }}
 		    
-		</a><span class="clb" itemscope="itemscope" itemtype="http://www.schema.org/SiteNavigationElement"> ki new <b>mehfil</b> mein <a href="{% url 'public_group' slug=link.m %}"><button class="btn nw bl bcp" style="height:22px" itemprop="name">shamil ho</button></a>&nbsp;:&nbsp;<a href="{% url 'public_group' slug=link.m %}" class="cp" itemprop="url"><u>{{ link.de }}</u></a></span><span class="cs cgy"><bdi>, {{ link.t|human_time }}</bdi></span>
+		</a><span class="clb lsp" itemscope="itemscope" itemtype="http://www.schema.org/SiteNavigationElement"> ki new <b>mehfil</b> mein <a href="{% url 'public_group' slug=link.m %}"><button class="btn nw bl bcp" style="height:22px" itemprop="name">shamil hon</button></a>&nbsp;:&nbsp;<a href="{% url 'public_group' slug=link.m %}" class="cp" itemprop="url"><u>{{ link.de }}</u></a></span><span class="cs cgy"><bdi>, {{ link.t|human_time }}</bdi></span>
 		{{ link.ct|safe }}
 	</div>
 	
@@ -134,9 +134,8 @@
 	</div>
 	
 
-		<div style="overflow:hidden"><b class="cl clb"><bdi>{% emoticons %}<span itemprop="headline">{{ link.de }}</span>{% endemoticons %}</bdi></b>
+		<div style="overflow:hidden"><b class="cl clb lsp"><bdi>{% emoticons %}<span itemprop="headline">{{ link.de }}</span>{% endemoticons %}</bdi></b>
 		{% block_button link.w link.n ident link.pi 'home:photo' STATIC_URL %}</div>
-
 
 	    {% if not link.aw == '1' or not link.h|add:"0" > 5 %}
 	    <a href="{% url 'see_photo_pk' link.pi %}">
@@ -227,7 +226,7 @@
 			{% endif %}
 
 			{{ link.p|safe }}:
-	    	<span class="cl clb bw"><bdi>{% emoticons %}<span itemprop="headline">{{ link.de }}</span>{% endemoticons %}</bdi></span>
+	    	<span class="cl clb bw lsp"><bdi>{% emoticons %}<span itemprop="headline">{{ link.de }}</span>{% endemoticons %}</bdi></span>
 				<a name="section{{ forloop.counter  }}"></a>
 			<span class="cs cgy mrs"><bdi>,<span itemprop="datePublished">{{ link.t|human_time }}</span></bdi></span>
 

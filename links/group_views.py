@@ -1,6 +1,8 @@
 # for starters, only create private mehfil
 import ujson as json
 import uuid, random, time
+from datetime import datetime
+from collections import defaultdict
 from django.middleware import csrf
 from django.http import HttpResponse
 from django.contrib.auth.models import User
@@ -12,7 +14,8 @@ from redis1 import check_photo_upload_ban
 from redis3 import tutorial_unseen, get_user_verified_number
 from redis2 import update_notification, skip_private_chat_notif
 from redis4 import set_photo_upload_key, get_and_delete_photo_upload_key, retrieve_bulk_unames, retrieve_bulk_avurls, avg_num_of_chats_per_type,\
-avg_num_of_switchovers_per_type, avg_sessions_per_type, get_cached_photo_dim, cache_photo_dim, retrieve_uname
+avg_num_of_switchovers_per_type, avg_sessions_per_type, get_cached_photo_dim, cache_photo_dim, retrieve_uname, retrieve_user_id, retrieve_photo_data,\
+retrieve_fresh_photo_shares_or_cached_data
 from redis5 import personal_group_invite_status, process_invite_sending, interactive_invite_privacy_settings, personal_group_sms_invite_allwd, \
 delete_or_hide_chat_from_personal_group, personal_group_already_exists, add_content_to_personal_group, retrieve_content_from_personal_group, \
 sanitize_personal_group_invites, delete_all_user_chats_from_personal_group, check_single_chat_current_status, get_personal_group_anon_state, \
@@ -25,7 +28,8 @@ delete_single_personal_group_saved_content, delete_all_personal_group_saved_cont
 toggle_save_permission, exit_already_triggered, purge_all_saved_chat_of_user,unsuspend_personal_group, can_change_number, get_target_username,\
 get_single_user_credentials, get_user_credentials, get_user_friend_list, get_rate_limit_in_personal_group_sharing, can_share_photo#, exited_personal_group_hard_deletion
 from tasks import personal_group_trimming_task, add_image_to_personal_group_storage, queue_personal_group_invitational_sms, private_chat_tasks, \
-cache_personal_group, update_notif_object_anon, update_notif_object_del, update_notif_object_hide, private_chat_seen, photo_sharing_metrics_and_rate_limit
+cache_personal_group, update_notif_object_anon, update_notif_object_del, update_notif_object_hide, private_chat_seen, photo_sharing_metrics_and_rate_limit,\
+cache_photo_shares
 from page_controls import PERSONAL_GROUP_IMGS_PER_PAGE, PERSONAL_GROUP_MAX_SMS_SIZE, PERSONAL_GROUP_SMS_LOCK_TTL, PERSONAL_GROUP_OWN_BG, PRIV_CHAT_EMOTEXT, \
 PERSONAL_GROUP_THEIR_BG, PERSONAL_GROUP_OWN_BORDER, PERSONAL_GROUP_THEIR_BORDER, OBJS_PER_PAGE_IN_USER_GROUP_LIST, OBJS_PER_PAGE_IN_USER_GROUP_INVITE_LIST, \
 PRIV_CHAT_NOTIF, PHOTO_SHARING_FRIEND_LIMIT
@@ -38,7 +42,7 @@ from forms import UnseenActivityForm
 from models import Photo
 
 ONE_DAY = 60*60*24
-
+ONE_WEEK = 7*60*60*24
 
 # def deletion_test(request):
 # 	"""
@@ -708,7 +712,8 @@ def personal_group_own_chat_buttons(request):
 				'their_tgt_nick':their_nick,'their_css_shadow':'sh-l','shadow_base_color':'#00E699','usr':username,'aurl':av_url,'idx':index,'ct':content,\
 				'tt':tt,'img_width':img_width,'time':posting_time,'img_cap':image_caption,'t_usr':target_username,'is_res':is_res,'tid':target_id,\
 				't_aurl':target_av_url,'t_st':target_status,'t_tt':target_content_type,'t_time':target_posting_time,'t_ct':request.POST.get('rpl_ct',None),\
-				't_img_cap':request.POST.get('t_isc',None),'bclass':PERSONAL_GROUP_OWN_BORDER,'their_bclass':PERSONAL_GROUP_THEIR_BORDER})
+				't_img_cap':request.POST.get('t_isc',None),'bclass':PERSONAL_GROUP_OWN_BORDER,'their_bclass':PERSONAL_GROUP_THEIR_BORDER,\
+				'original_poster':request.POST.get('op',None)})
 		else:
 			return redirect("enter_personal_group")
 	else:
@@ -743,7 +748,7 @@ def personal_group_their_chat_buttons(request):
 			else:
 				return redirect("missing_page")	
 		elif decision == '2':
-			# save post, generalize all if clauses
+			# save their post, generalize all if clauses
 			payload = request.POST.get('pl',None)
 			payload = payload.split(":")
 			try:
@@ -783,7 +788,7 @@ def personal_group_their_chat_buttons(request):
 					'own_tgt_nick':own_nick,'their_css_shadow':'sh-r','shadow_base_color':'#68D0FD','usr':usr,'aurl':av_url,'tt':tt,'t_time':t_time,'t_usr':t_usr,\
 					'ct':request.POST.get('pl_ct',None),'idx':idx,'img_cap':request.POST.get('cp',None),'img_width':img_width,'time':time,'is_res':is_res,'tid':tid,\
 					't_st':t_st,'t_tt':t_tt,'t_ct':request.POST.get('t_pl_ct',None),'t_img_cap':request.POST.get('t_scp',None),'their_bclass':PERSONAL_GROUP_OWN_BORDER,\
-					't_aurl':t_aurl})
+					't_aurl':t_aurl,'original_poster':request.POST.get('op',None)})
 		elif decision == '3':
 			# hide/unhide
 			payload = request.POST.get('pl',None)
@@ -2235,28 +2240,53 @@ def personal_group_user_listing(request):
 ####################################################################################################################
 
 
+@csrf_protect
 def personal_group_help1(request):
 	"""
+	Renders private chat help page
 	"""
-	return render(request,"personal_group/help/personal_group_help1.html",{})
+	if request.method == 'POST':
+		tid = request.POST.get('tid',None)
+		return render(request,"personal_group/help/personal_group_help1.html",{'tid':tid})
+	else:
+		return render(request,"personal_group/help/personal_group_help1.html",{})
 
 
+@csrf_protect
 def personal_group_help2(request):
 	"""
+	Renders private chat help page
 	"""
-	return render(request,"personal_group/help/personal_group_help2.html",{})
+	if request.method == 'POST':
+		tid = request.POST.get('tid',None)
+		return render(request,"personal_group/help/personal_group_help2.html",{'tid':tid})
+	else:
+		return render(request,"personal_group/help/personal_group_help2.html",{})
 
 
+@csrf_protect
 def personal_group_help3(request):
 	"""
+	Renders private chat help page
 	"""
-	return render(request,"personal_group/help/personal_group_help3.html",{})
+	if request.method == 'POST':
+		tid = request.POST.get('tid',None)
+		return render(request,"personal_group/help/personal_group_help3.html",{'tid':tid})
+	else:
+		return render(request,"personal_group/help/personal_group_help3.html",{})
 
 
+@csrf_protect
 def personal_group_help4(request):
 	"""
+	Renders private chat help page 
 	"""
-	return render(request,"personal_group/help/personal_group_help4.html",{})
+	if request.method == 'POST':
+		tid = request.POST.get('tid',None)
+		return render(request,"personal_group/help/personal_group_help4.html",{'tid':tid})
+	else:
+		return render(request,"personal_group/help/personal_group_help4.html",{})
+
 	
 def private_chat_help_ad(request):
 	"""
@@ -2267,6 +2297,43 @@ def private_chat_help_ad(request):
 #####################################################################################################################
 ######################################### Sharing Photos in Personal Groups #########################################
 #####################################################################################################################
+
+def show_shared_photo_metrics(request,nick):
+	"""
+	Shows shared photos metrics to users
+	"""
+	their_id = retrieve_user_id(nick)
+	if their_id:
+		own_id = str(request.user.id) if request.user.is_authenticated() else None
+		photo_content, is_cached = retrieve_fresh_photo_shares_or_cached_data(their_id)
+		if is_cached:
+			final_photo_data = photo_content
+		else:
+			epoch_time_one_week_ago = time.time()-ONE_WEEK
+			#############################
+			last_week_shared_by_others = defaultdict(int)
+			for content in photo_content:
+				data = content.split(":")
+				photo_id, num_shares, sharer_id, sharing_time = data[0], data[1], data[2], data[3]
+				if float(sharing_time) > epoch_time_one_week_ago:
+					if sharer_id != their_id:
+						last_week_shared_by_others[photo_id] += int(num_shares)
+			photos = sorted(last_week_shared_by_others.iteritems(),key=lambda (k,v):v,reverse=True)
+			photo_ids = [i[0] for i in photos][0:5]
+			photo_data = retrieve_photo_data(photo_ids, their_id)
+			final_photo_data = []
+			for photo_id in photo_ids:
+				photo_data[photo_id]['num_shares'] = last_week_shared_by_others[photo_id]
+				final_photo_data.append(photo_data[photo_id])
+			cache_photo_shares.delay(json.dumps(final_photo_data), their_id)
+		if own_id and tutorial_unseen(user_id=own_id, which_tut='4', renew_lease=True):
+			first_time = True
+		else:
+			first_time = False
+		return render(request,"personal_group/sharing/photo_sharing_metrics.html",{'final_photo_data':final_photo_data,'num_photos':len(final_photo_data),\
+			'own_profile': their_id == own_id,'username':nick,'photo_owner_id':their_id,'first_time':first_time})
+	else:
+		return redirect('profile',nick)
 
 
 def cant_share_photo(request, ttl=None,*args, **kwargs):
@@ -2318,7 +2385,7 @@ def post_shared_photo_to_personal_groups(group_ids,photo_url,photo_caption,photo
 		for group_id in photo_allwd:
 			# send the photo!
 			content, type_ = {'img_url':photo_url, 'img_width':img_width, 'img_height':img_height, 'owner_uname':photo_owner_username, \
-			'img_caption':photo_caption},'shared_img'
+			'img_caption':photo_caption,'owner_id':photo_owner_id,'pid':photo_id},'shared_img'
 			obj_count, obj_ceiling, gid, bid, idx, img_id, img_wid, hw_ratio = add_content_to_personal_group(content=content, type_=type_,\
 				writer_id=own_id, group_id=group_id)
 			# image 'quality' shows the "low quality - uploaded via fbs" msg. We can omit it for this case, hence setting it to 'True'
@@ -2332,24 +2399,6 @@ def post_shared_photo_to_personal_groups(group_ids,photo_url,photo_caption,photo
 		photo_sharing_metrics_and_rate_limit.delay(own_id, photo_id, photo_owner_id, len(photo_allwd),sharing_time, photo_allwd)
 	else:
 		pass
-	# print photo_allwd # list of groups where photos were permitted
-	# print legit_groups # dictionary of {group_id:their_id} containing groups own_id is a member of
-	# print nonlegit_groups # list of groups user wasn't a part of
-	# print photo_disallwd # list of groups where photos weren' permitted
-
-	# test multiple shares (done)
-	# fix user chat list (done)
-	# does single_notif work? (done)
-	# does matka work? (done)
-	# update 'seen' of sharing user (done)
-	# is private_chat_tasks called twice? (done - yes it's called as many times as needed!)
-	# rate limit sharing feature (done)
-	# make it possible to go into respective chats when on 'photo shared successfully' page (done)
-	# how does it all behave with nicks not utilizing english characters? (done)
-	# shared photo analytics (done)
-	# does group content deletion get hindered because of the new 'shared_img' category? (done)
-	# revert log_photo_attention_from_fresh() related functionality in redis4.py
-
 	return photo_allwd, photo_disallwd
 
 
@@ -2485,9 +2534,11 @@ def share_photo_in_personal_group(request):
 				context["no_friends"] = True
 			else:
 				context["friend_data"] = group_and_friend
+				context["num_friends"] = len(group_and_friend)
 			return render(request,"personal_group/sharing/share_photo_in_personal_group.html",context)
 	else:
 		return redirect("missing_page")
+
 
 
 #####################################################################################################################

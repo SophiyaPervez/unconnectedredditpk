@@ -28,4 +28,8 @@
         {% csrf_token %}
         <button type="submit" class="cp cp-bg mls mrs" style="background-image: url('{{ static_url }}img/exit.svg')" name="tid" value="{{ tid }}">&nbsp;</button>
       </form>
+      <form method="POST" action="{% url 'personal_group_help1' %}" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" class="cp cp-bg mls mrs" style="background-image: url('{{ static_url }}img/help.svg')" name="tid" value="{{ tid }}">&nbsp;</button>
+      </form>
 </div>

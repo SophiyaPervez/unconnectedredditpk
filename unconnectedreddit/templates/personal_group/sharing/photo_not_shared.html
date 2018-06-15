@@ -30,6 +30,8 @@
 	<a href="{% url 'user_profile_photo' photo_owner_username photo_id %}">
 	{% elif origin == '5' %}
 	<a href="{% url 'unseen_activity' user.username %}">
+	{% elif origin == '6' %}
+	<a href="{% url 'show_shared_photo_metrics' photo_owner_username %}">
 	{% else %}
 	<a href="{% url 'home' %}">
 	{% endif %}

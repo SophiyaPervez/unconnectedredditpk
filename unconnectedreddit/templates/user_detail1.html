@@ -76,6 +76,8 @@
       <hr size=1 COLOR="#b3e6b3">
       <b>Photo score:</b>&nbsp;<span class="cp"><b>{{ subject.userprofile.media_score }}</b></span>
       <hr size=1 COLOR="#b3e6b3">
+      <b>Most shared:</b>&nbsp;<a href="{% url 'show_shared_photo_metrics' slug %}"><button type="submit" class="btn nw bcg bm" style="height:22px">fotos</button></a>
+      <hr size=1 COLOR="#b3e6b3">
       <b>Nickname:&nbsp;</b><span class="clb">{{ slug }}</span><a href="{% url 'user_profile' slug %}#section0" class="cs">&nbsp;<button class="btn bcg bm mls" style="height:22px">profile</button></a>
       <hr size=1 COLOR="#b3e6b3">
       <b>Password:&nbsp;</b><a href="{% url 'reauth' %}#section0"><button class="btn bcg bm" style="height:22px">change</button></a>
@@ -139,7 +141,7 @@
       {% if manageable and user.username == 'pathan-e-khan' or user.username == 'mhb11' %}&nbsp;<form method="POST" action="{% url 'manage_user' %}" style="display:inline">{% csrf_token %}<input type="hidden" name="m_id" value="{{ user.id }}"><input type="hidden" name="t_id" value="{{ star_id }}"><button type="submit" class="btn bco bm mls" style="height:22px">manage</button></form>{% endif %}
       <hr size=1 COLOR="#b3e6b3">
       <b>Fans:</b>
-      <a href="{% url 'fan_list' star_id %}" class="cs"><button class="btn bcg mrl mbs" style="height:22px">&nbsp;{{ fans }}&nbsp;</button></a>
+      <a href="{% url 'fan_list' star_id %}" class="cs"><button class="btn bcg mrl" style="height:22px">&nbsp;{{ fans }}&nbsp;</button></a>
        {% if authenticated and not own_profile and allowed_fan %}
         <form action="{% url 'fan' %}" method="POST" style="display:inline">
         {% csrf_token %}
@@ -152,7 +154,8 @@
           {% endif %}
         </form>
         {% endif %}
-      
+      <hr size=1 COLOR="#b3e6b3">
+      <b>Most shared:</b>&nbsp;<a href="{% url 'show_shared_photo_metrics' slug %}"><button type="submit" class="btn nw bcg bm" style="height:22px">fotos</button></a>
                   
     {% endif %}
 </div>

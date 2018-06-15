@@ -1,11 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
 <head><title>Usr blocking help | Damadam.pk</title></head>
-<div class="margin clb">
-<span class="cxl">Block ka maqsad buray users ko sirf <b>apki apni</b> posts aur fotos se bahir rakhna hai</span><br>
-<div class="mt cgy cl">
+<style>body{background: #E9EBEE}</style>
+<h1 class="cxl clb" style="text-align:center">Block Help</h1>
+<div class="clb bizcard" style="margin: 0 auto;max-width:520px;width:92%;padding:10px 8px;background-color:white">
+<span class="cxl lsp">Block ka maqsad buray users ko sirf <b>apki apni</b> posts aur fotos se bahir rakhna hai.</span>
+<div class="mt cgy cl lsp mts">
 Aik blocked user <b>dusrey users</b> ki posts ya fotos mein apse bat kar sakta hai. Ap dono aik dusrey ko jhappi chupair bhi mar sakte ho<br>
 </div>
+
+{% if target_username %}
+<form action="{% url 'enter_inter_user_ban' %}" method="POST" style="text-align:center">
+{% csrf_token %}
+<input type="hidden" name="init_dec" value="1">
+<button name="tunm" class="btn bcb bm mts mbl" type="submit" style="height:27px" value="{{ target_username }}">wapis</button>
+</form>
+{% endif %}
+
 </div>
 <br><br>
 {% endblock %}

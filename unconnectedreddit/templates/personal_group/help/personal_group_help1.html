@@ -1,22 +1,9 @@
 {% extends "base_pg.html" %}
 {% block content %}
 <head><title>Private chat help page 1 | Damadam.pk</title></head>
-
 <style>
 
-body
-
-{background: #E9EBEE}
-
-
-.help {
-
-	display: flex;
-	justify-content: flex-start;
-	border-bottom: 1px solid lightgrey;
-	
-	
-}
+body{background: #E9EBEE}
 
 .helpitem {
 	padding:10px;
@@ -26,62 +13,79 @@ body
 
 	display:inline-block;
 	font-weight:bold;
-	 background-color:white; 
-	 border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
+	background-color:white; 
+	border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
     border-style: solid;
     border-width: 1px;
-    padding: 1px 7px 2px;"
+    padding: 1px 7px 2px;
 }
 
 </style>
 
-<body>
-	<div style="margin:0 auto; text-align:center;">
-	<h1 class="cxl"> Help Menu </h1>
-</div>
-<div class="bizcard" style="width:90%;  margin:0 auto; max-width:500px; border-radius:6px; background-color: white;">
+<div style="margin:0 auto;max-width:520px;width:92%;">
 
-<div class="help">
-	<div class="helpitem">  <button  class="rep re re-bg mrl" name="dec" value="1" style="height:19px;width:23px;vertical-align:middle;padding:3px 5px; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; cursor:default; border:none;{{ incl_dresp }}" type="button" disabled>
+<div class="clb" style="margin:0 auto; text-align:center">
+<h1 class="cxl mbs">Private Chat Help</h1>
+</div>
+
+{% if tid %}
+<form method="POST" style="text-align:center" class="mbl" action="{% url 'enter_personal_group' %}" >
+{% csrf_token %}
+<button name="tid" value="{{ tid }}" class="cl" style="padding:0;background:0 0;border:none;border-bottom:1px dotted #666666;color:#666666;border-radius:0">wapis</button>
+</form>
+{% endif %}
+
+<div class="clb bizcard cl" style="width:90%;  margin:0 auto; max-width:500px; border-radius:6px; background-color: white;">
+
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem">  <button  class="rep re re-bg mrs" name="dec" value="1" style="height:19px;width:23px;vertical-align:middle;padding:3px 5px; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; cursor:default; border:none;{{ incl_dresp }}" type="button" disabled>
   <div id="line-gr"></div>
   <div id="line-gr"></div>
   <div id="line-gr" style="width: 8px;"></div>
  </button></div>
-	<div class="helpitem"> Is se ap aik aik jumley pe reply kar sakte hain</div>
+	<div class="helpitem lsp">Is se ap aik aik jumley pe reply kar sakte hain</div>
 </div>
 
-<div class="help">
-	<div class="helpitem"><button  class="re re-bg mrl" style="width:23px;height:20px;vertical-align:middle;{{ incl_save }}; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; border:none; cursor:default;" type="button" disabled><div id="t-arr-gr"></div><div id="b-arr-gr"></div></button></div>
-	<div class="helpitem"> Is se ap doosray ki chat save kar sakte hain</div>
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem"><button  class="re re-bg mrs" style="width:23px;height:20px;vertical-align:middle;{{ incl_save }}; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; border:none; cursor:default;" type="button" disabled><div id="t-arr-gr"></div><div id="b-arr-gr"></div></button></div>
+	<div class="helpitem lsp">Is se ap dusrey ki chat save kar sakte hain</div>
 
 </div>
 
-<div class="help">
-	<div class="helpitem"><button  class="re re-bg mrl" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; border:none; cursor:default;"><div id="bminus-gr"></div></button> </div>
-	<div class="helpitem"> Is se ap doosray ki lagai howi pic hide kar sakte hain</div>
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem"><button  class="re re-bg mrs" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; border:none; cursor:default;"><div id="bminus-gr"></div></button> </div>
+	<div class="helpitem lsp">Is se ap dusrey ki lagai hui pic hide kar sakte hain</div>
 </div>
 
-<div class="help">
-	<div class="helpitem"><button  class="re re-bg mrl" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; border:none; cursor:default; padding-bottom:2px;"><div id="bplus-gr"></div></button> </div>
-	<div class="helpitem"> Is se ap doosray ki hide ki howi pic ko unhide kar sakte hain</div>
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem"><button  class="re re-bg mrs" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDFFE9; border-radius: 1px 8px 1px 8px; border:none; cursor:default; padding-bottom:2px;"><div id="bplus-gr"></div></button> </div>
+	<div class="helpitem lsp">Is se ap dusrey ki hide ki hui pic ko unhide kar sakte hain</div>
 </div>
 
-<div class="help">
-	<div class="helpitem"><button  class="re re-bg mrl" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDEBFE; border-radius: 1px 8px 1px 8px; border:none; cursor:default;"><div id="bminus-gr"></div></div>
-	<div class="helpitem"> Is se ap apni chat mita sakte hain</div>
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+	<div class="helpitem"><button  class="re re-bg mrs" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDEBFE; border-radius: 1px 8px 1px 8px; border:none; cursor:default;"><div id="bminus-gr"></div></button></div>
+	<div class="helpitem lsp">Is se ap apni chat mita sakte hain</div>
 </div>
 
-<div class="help">
-    <div class="helpitem"><button  class="re re-bg mrl" style="width:23px;height:20px;vertical-align:middle;{{ incl_save }}; background-color:#BDEBFE; border-radius: 1px 8px 1px 8px; border:none; cursor:default;" type="button" disabled><div id="t-arr-gr"></div><div id="b-arr-gr"></div></button></div>
-    <div class="helpitem"> Is se ap apni chat save kar sakte hain</div>
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+    <div class="helpitem"><button  class="re re-bg mrs" style="width:23px;height:20px;vertical-align:middle;{{ incl_save }}; background-color:#BDEBFE; border-radius: 1px 8px 1px 8px; border:none; cursor:default;" type="button" disabled><div id="t-arr-gr"></div><div id="b-arr-gr"></div></button></div>
+    <div class="helpitem lsp">Is se ap apni chat save kar sakte hain</div>
+</div>
+
+<div style="border-bottom: 1px solid lightgrey" class="fx fxjsfs">
+    <div class="helpitem"><button  class="re re-bg mrs" style="padding:0;width:22px;height:19px;vertical-align: middle; background-color:#BDEBFE; border-radius: 1px 8px 1px 8px; border:none; cursor:default; padding-bottom:2px;"><div id="bplus-gr"></div></button> </div>
+    <div class="helpitem lsp">Is se ap apni mitai hui chat wapis la sakte hain</div>
 </div>
 </div>
 <br>
 <div style="text-align:center">
-<a href="{% url 'personal_group_help1'%}#section0" style="text-decoration:none; color:black"><button class="mrs curr_page cl nav-btn">1</button></a>
-<a href="{% url 'personal_group_help2'%}#section0"><button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090">2</button></a>
-<button class="mrs curr_page cl nav-btn" ><a href="{% url 'personal_group_help3'%}#section0" style="text-decoration:none; color:#909090">3</a></button>
-<button class="mrs curr_page cl nav-btn"><a href="{% url 'personal_group_help4'%}#section0" style="text-decoration:none; color:#909090;">4</a></button></div>
+<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:black">1</button>
+<form method="POST" style="display:inline" action="{% url 'personal_group_help2'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">2</button></form>
+
+<form method="POST" style="display:inline" action="{% url 'personal_group_help3'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">3</button></form>
+
+<form method="POST" style="display:inline" action="{% url 'personal_group_help4'%}">{% csrf_token %}<button class="mrs curr_page cl nav-btn" style="text-decoration:none; color:#909090" name="tid" value="{{ tid }}">4</button></form>
+</div>
+</div>
 <br><br>
-</body>
 {% endblock %}

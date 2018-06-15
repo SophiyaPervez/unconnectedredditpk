@@ -769,7 +769,7 @@ def retrieve_photo_posts(photo_id_list):
 	result1 = pipeline1.execute()
 	count = 0
 	for hash_obj in result1:
-		if 'u' in hash_obj:
+		if 'u' in hash_obj:#'u' is image_url
 			list_of_dictionaries.append(hash_obj)
 		count += 1
 	return list_of_dictionaries 
@@ -777,11 +777,11 @@ def retrieve_photo_posts(photo_id_list):
 def add_photo_entry(photo_id=None,owner_id=None,owner_av_url=None,image_url=None,\
 	upload_time=None,invisible_score=None,caption=None,photo_owner_username=None,\
 	device=None,from_fbs=None):
-	my_server = redis.Redis(connection_pool=POOL)
 	hash_name = "ph:"+str(photo_id)
 	mapping = {'i':photo_id,'oi':owner_id,'oa':owner_av_url,'u':image_url,'t':upload_time,\
 	'in':invisible_score,'ca':caption,'o':photo_owner_username,'d':device,'vi':'0','vo':'0',\
 	'fbs':'1' if from_fbs else '0'}
+	my_server = redis.Redis(connection_pool=POOL)
 	my_server.hmset(hash_name, mapping)
 	my_server.expire(hash_name,ONE_DAY) #expire the key after 24 hours
 
@@ -789,8 +789,11 @@ def add_photo_entry(photo_id=None,owner_id=None,owner_av_url=None,image_url=None
 def add_photo_comment(photo_id=None,photo_owner_id=None,latest_comm_text=None,latest_comm_writer_id=None,\
 	latest_comm_av_url=None,latest_comm_writer_uname=None,comment_count=None, exists=None, citizen=None, \
 	time=None):
-	my_server = redis.Redis(connection_pool=POOL)
+	"""
+	Adds comment to photo object (only if it exists)
+	"""
 	hash_name = "ph:"+str(photo_id)
+	my_server = redis.Redis(connection_pool=POOL)
 	if my_server.exists(hash_name):
 		#################################Saving latest photo comment################################
 		existing_payload = my_server.hget(hash_name,'comments')
@@ -806,10 +809,11 @@ def add_photo_comment(photo_id=None,photo_owner_id=None,latest_comm_text=None,la
 
 
 
-
 def get_raw_comments(photo_id):
-	my_server = redis.Redis(connection_pool=POOL)
-	return my_server.hget("ph:"+str(photo_id),"comments")
+	"""
+	Returns comments associated to a photo
+	"""
+	return redis.Redis(connection_pool=POOL).hget("ph:"+str(photo_id),"comments")
 
 
 def ban_photo(photo_id,ban):
@@ -825,9 +829,9 @@ def ban_photo(photo_id,ban):
 			pass
 
 def add_vote_to_photo(photo_id, username, value,is_pinkstar, is_citizen):
-	my_server = redis.Redis(connection_pool=POOL)
 	sorted_set = "vp:"+str(photo_id) #vv is 'voted photo'
 	hash_name = "ph:"+str(photo_id)
+	my_server = redis.Redis(connection_pool=POOL)
 	already_exists = my_server.zscore(sorted_set, username)
 	if already_exists != 0 and already_exists != 1:
 		#add the voter's username and vote_value (for display later)

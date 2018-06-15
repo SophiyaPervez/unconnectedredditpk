@@ -1,27 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 <head><title>Block target user | Damadam.pk</title></head>
-<div class="margin clb">
+<style>body{background: #E9EBEE}</style>
 
+<h1 class="cxl clb" style="text-align:center">Block User</h1>
+
+<div class="clb bizcard" style="margin: 0 auto;max-width:520px;width:92%;padding:10px 8px;background-color:white">
 
 {% if to_ban %}
-	<span class="cxl">Kya <span class="ct">{{ target_username|truncatechars:15 }}</span> ko apki posts and fotos pe likhne se block karna hai?</span><br>
-	<div class="mbl">
-	<span class="cgy cl">Block karney se ap bhi <span class="ct">{{ target_username|truncatechars:15 }}</span> ki posts aur fotos pe nahi likh sako ge</span>
+	<span class="cxl lsp">Kya <span class="ct">{{ target_username|truncatechars:15 }}</span> ko apki posts and fotos pe likhne se block karna hai?</span>
+	<div class="mbs mts">
+	<span class="cgy cl lsp">Block karney se ap bhi <span class="ct">{{ target_username|truncatechars:15 }}</span> ki posts aur fotos pe nahi likh sakein ge</span>
 	</div>
-		<form action="{% url 'enter_inter_user_ban' %}" method="POST">
+		<form action="{% url 'enter_inter_user_ban' %}" style="text-align:center" method="POST">
 		{% csrf_token %}
 		<input type="hidden" name="tuid" value="{{ target_user_id }}">
 		<input type="hidden" name="tunm" value="{{ target_username }}">
-		<button type="submit" name="init_dec" value="1" class="btn bcg mbl bl">Block karo</button><br>
-		<button type="submit" name="init_dec" value="0" class="btn bcgy bl mts mbl">Rehnay do</button>
+		<button type="submit" name="init_dec" value="1" class="btn bcb mbl bl sp mrl" style="height:27px">Block</button>
+		<button type="submit" name="init_dec" value="0" class="btn bcgy bl mts mbl sp" style="height:27px">Cancel</button>
 		</form>
 
 {% elif decide_time %}
 
-	<span class="cxl"><span class="ct">{{ target_username|truncatechars:15 }}</span> ko kitney time ke liye apki posts and fotos se block karna hai?</span><br>
-	<div class="mbl">
-	<span class="cgy cl"><span class="ct">{{ target_username|truncatechars:15 }}</span> kisi aur user ki post, foto ya mehfilun mein ap se phir bhi bat kar sakey ga. Ap dono aik dusrey ko jhappi chupair bhi mar sako ge&nbsp;<a href="{% url 'user_ban_help' %}"><button class="btn cs bcgy mls bs mts">kiyun?</button></a></span>
+	<span class="cxl lsp"><span class="ct">{{ target_username|truncatechars:15 }}</span> ko kitney time ke liye apki posts and fotos se block karna hai?</span>
+	<div class="mbl mts">
+	<span class="cgy cl lsp"><span class="ct">{{ target_username|truncatechars:15 }}</span> kisi aur user ki post, foto ya mehfilun mein ap se phir bhi bat kar sakey ga. Ap dono aik dusrey ko jhappi chupair bhi mar sakein ge&nbsp;<form method="POST" action="{% url 'user_ban_help' %}" style="display:inline">{% csrf_token %}<button name="tunm" class="cgy cxs sp" type="submit" style="padding:0;background:0 0;border:none;border-bottom:1px dotted gray;border-radius:0" value="{{ target_username }}">(kiyun?)</button></form></span>
 	</div>
 
 		<form action="{% url 'enter_inter_user_ban' %}" method="POST">
@@ -33,21 +36,19 @@
 		{% else %}
 		<input style="margin:-2px 10px 0 0;vertical-align:middle;" type="radio" name="sec_dec" value="0" checked><span class="cb">Block nahi kro</span><br><br>
 		{% endif %}
-		<input style="margin:-2px 10px 0 0;vertical-align:middle;" type="radio" name="sec_dec" value="1"><span class="cr">1 day block</span><br><br>
-		<input style="margin:-2px 10px 0 0;vertical-align:middle;" type="radio" name="sec_dec" value="2"><span class="cr">3 days block</span><br><br>
 		<input style="margin:-2px 10px 0 0;vertical-align:middle;" type="radio" name="sec_dec" value="3"><span class="cr">1 week block</span><br><br>
 		<input style="margin:-2px 10px 0 0;vertical-align:middle;" type="radio" name="sec_dec" value="4"><span class="cr">1 month block</span><br><br>
 		<input style="margin:-2px 10px 0 0;vertical-align:middle;" type="radio" name="sec_dec" value="5"><span class="cr">3 months block</span><br><br>
-		<button class="btn bm bcr mbs mtl" type="submit">OK</button>
+		<button class="btn bm bcr mbs mts" type="submit" style="height:27px">OK</button>
 		</form>
 
 {% elif not_verified %}
-	<b class="cxl">Apke mobile number ko verify kiye beghair ye nahi ho sakta</b><br>
+	<span class="cxl lsp">Block karney ke liye pehlay apna mobile number verify karwain</span><br>
 	<div class="mt">
-	<span class="cl">Verify karwaney ke liye 'OK' dabain:</span><br>
+	<span class="cl lsp cgy">Verify karwaney ke liye 'OK' dabain:</span><br>
 	</div>
 
-	<form method="get" class="mtl mbl" action="https://www.accountkit.com/v1.0/basic/dialog/sms_login/">
+	<form method="get" class="mtl mbs" style="text-align:center" action="https://www.accountkit.com/v1.0/basic/dialog/sms_login/">
 	  <input type="hidden" name="country_code" value="PK">
 	  <input type="hidden" name="app_id" value="1758220174446684">
 	  <input type="hidden" name="locale" value="ur_PK">
@@ -55,7 +56,7 @@
 	  <input type="hidden" name="redirect" value="https://damadam.pk/vun/">
 	  <input type="hidden" name="state" value="{{ csrf }}">
 	  <input type="hidden" name="fbAppEventsEnabled" value=true>
-	  <input type="submit" class="mtl mbl ma" style="color:white;background-color:#00c853;border:solid 1px #008033;font-size:110%;width:4em;" value="OK">
+	  <button class="btn bcb bm sp" style="height:27px">OK</button>
 	</form>
 
 {% elif already_banned %}
@@ -68,14 +69,14 @@
 		<form action="{% url 'change_ban_time' %}" method="POST">
 		{% csrf_token %}
 		<input type="hidden" name="buid" value="{{ target_user_id }}">
-		<button name="bun" type="submit" class="btn bcg bm" value="{{ target_username }}">OK</button>
+		<button name="bun" type="submit" class="btn bcb bm" value="{{ target_username }}" style="height:27px">OK</button>
 		</form>
 	{% elif banned_by == 'other' %}
 		<span class="cxl"><span class="ct">{{ target_username|truncatechars:15 }}</span> ko block nahi kiya ja sakta!</span>
 		<div class="mt mbl">
 		<span class="cgy cl">Is ne apko pehlay se hi block kiya hua hai. Na ye apki post pe likh sakta hai, na ap iski post pe</span><br>
 		</div>
-		<a href="{% url 'home' %}#section0"><button class="btn bcg bm">wapis</button></a>
+		<a href="{% url 'home' %}#section0"><button class="btn bcb bm" style="height:27px">wapis</button></a>
 
 	{% endif %}
 
@@ -83,9 +84,9 @@
 	
 	<span class="cxl"><span class="ct">{{ target_username|truncatechars:15 }}</span> ko apki posts and fotos pe likhne se block kardiya gaya hai</span>
 	<div class="mt mbl">
-	<span class="cgy cl">Ap apni profile mein <b>blocked users</b> ka button daba kar is block ko time se pehle khatam bhi kar saktey hein</span><br>
+	<span class="cgy cl">Ap apni profile mein <b>blocked users</b> ka button daba kar is block ko time se pehle end kar saktey hein</span><br>
 	</div>
-	<a href="{% url 'profile' own_username %}#section0"><button class="btn bcg bm">OK</button></a>
+	<a href="{% url 'profile' own_username %}#section0"><button class="btn bcb bm" style="height:27px">OK</button></a>
 
 {% endif %}
 </div>

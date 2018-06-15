@@ -49,8 +49,8 @@
 
           <div class="mls mbs mrs">
 
-              {% if tt == 'img' %}
-                  {% personal_group_big_photo img_url=ct|s3 img_caption=img_cap|emoticons css_shadow=css_shadow max_width=img_width static_url=STATIC_URL %}
+              {% if tt == 'img' or tt == 'shared_img' %}
+                  {% personal_group_big_photo img_url=ct|s3 img_caption=img_cap|emoticons css_shadow=css_shadow max_width=img_width static_url=STATIC_URL original_poster=original_poster %}
               {% elif tt == 'text' %}
                   <span class="lsp cl"><bdi>{% emoticons %}{{ ct }}{% endemoticons %}</bdi></span>
               {% endif %}
